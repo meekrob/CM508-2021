@@ -1,0 +1,167 @@
+---
+title: "Iris Dataset"
+author: "David C. King"
+date: "2/17/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+bibliography: iris.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      error = TRUE # do not interrupt in case of errors
+                      )
+
+# install packages if needed
+if (! require(reshape2)) {install.packages("reshape2")}
+if (! require(ggplot2)) {install.packages("ggplot2")}
+
+library(reshape2)
+library(ggplot2)
+```
+
+
+# Builtin datasets
+R has a package called "datasets" that provides many old but readily available datasets to test things out on.
+
+In the console, do `?iris`
+
+The help window will gives a description of the data, and the format of the `iris` and `iris3` data frames.
+
+To see the full list of datasets in the package, click on 'Index' at the bottom of the help page.
+
+# `iris` dataset
+
+### Description
+
+This famous (Fisher's [@Fisher1936] or Anderson's [@Anderson1936]) iris data set gives the measurements in centimeters of the variables sepal length and width and petal length and width, respectively, for 50 flowers from each of 3 species of iris. The species are Iris *setosa*, *versicolor*, and *virginica.*
+
+
+```{r iris dataframe}
+
+data(iris) # copies the data frame into your workspace
+head(iris) # see the first 10 rows. A data frame is basically a spreadsheet
+iris$Petal.Length # access a whole column by name using the '$'
+iris[[3]] # or by its column number in [[ ]] 
+```
+# Visualizing the iris data
+
+How do we get a sense of Sepal and Petal dimensions among iris species? Given these measurements, let's look at some of their properties.
+
+## Boxplots
+
+The distributions of each measurement reveal a greater variability in certain species.
+
+```{r individual boxplots, include=FALSE}
+ggplot(iris, aes(x=Sepal.Length, col=Species)) + geom_boxplot() 
+ggplot(iris, aes(x=Sepal.Width, col=Species)) + geom_boxplot() 
+ggplot(iris, aes(x=Petal.Length, col=Species)) + geom_boxplot() 
+ggplot(iris, aes(x=Petal.Width, col=Species)) + geom_boxplot() 
+```
+
+To make a paneled version of the four boxplots, we make a new data structure. I.e., stick all the value columns together vertically, then add a descriptive column as to which measurement they are.
+
+```{r wide versus long data frame}
+library(reshape2) # for melt
+iris_long = melt(iris, 
+               id = "Species",
+               value.name = "centimeters", 
+               variable.name = "flower_part") 
+
+head(iris_long) 
+```
+
+### Split into different boxplots based on the flower part.
+
+```{r boxplots with panels face_wrap}
+ggplot(iris_long, aes(x = centimeters, col = Species)) + 
+  geom_boxplot() + 
+  facet_wrap( ~ flower_part)
+```
+
+The most variable measurements appear to be the sepal and petal lengths of *versicolor* and *virginica*. The least amount of variation appears to be in the petal width and lengths of *setosa*.
+
+*setosa* is easiest to distinguish from the other species.
+
+### Split the boxplots by species instead of flower part.
+```{r }
+ggplot(iris_long, aes(x=centimeters, col=flower_part)) + 
+  geom_boxplot() + 
+  facet_wrap(~Species) 
+```
+
+Again, *setosa* has the most characteristic pattern, whereas *versicolor* and *virginica* are more similar to each other.
+
+
+## Scatter plots
+
+Comparing measurements is a way to get a sense of the data. Plot the columns in the data frame against each other.
+
+```{r traditional iris plots, include=FALSE}
+# plot two columns against each other
+plot(iris$Sepal.Length,iris$Sepal.Width, main="main title")
+summary(iris)
+
+# add meaningful labels
+plot(iris$Sepal.Length,iris$Sepal.Width, main="Sepal length vs width", xlab="Sepal Length", ylab="Sepal Width")
+
+plot(iris$Sepal.Length,iris$Sepal.Width, main="Sepal length vs width", xlab="Sepal Length", ylab="Sepal Width", col=iris$Species)
+
+# you can change the color with "col"
+plot(iris$Sepal.Length,iris$Sepal.Width, main="Sepal length vs width", xlab="Sepal Length", ylab="Sepal Width", col="purple") # col can be a "named" color 
+
+# There are about 650 of them. Let's look at the ends of the list
+head(colors())
+tail(colors())
+
+# color can be a number
+plot(iris$Sepal.Length,iris$Sepal.Width, main="Sepal length vs width", xlab="Sepal Length", ylab="Sepal Width", col=2)
+
+# factors can be used as numbers
+class(iris$Species)
+plot(iris$Sepal.Length,iris$Sepal.Width, main="Sepal length vs width", xlab="Sepal Length", ylab="Sepal Width", col=iris$Species)
+
+legend(7,4.5, legend=levels(iris$Species),col=seq_along(levels(iris$Species)),pch=21)
+
+# factors are a special type that can be used as a "grouping" variable
+# R uses them as numbers
+levels(iris$Species)
+
+```
+
+```{r iris-ggplots, echo=FALSE}
+library(ggplot2)
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width,col=Species)) + 
+  geom_point() + 
+  ggtitle("Iris Dataset", subtitle = "Sepal Length x Width")
+
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length,col=Species)) + 
+  geom_point() + 
+  ggtitle("Iris Dataset", subtitle = "Sepal Length x Petal Length")
+
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Width,col=Species)) + 
+  geom_point() + 
+  ggtitle("Iris Dataset", subtitle = "Sepal Length x Petal Width")
+
+```
+Different sepal to petal comparisons seem to separate better than others.
+
+### Adding a trendline with `stat_smooth()`
+
+```{r scatterplot with trendline}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length,col=Species)) + 
+  geom_point() + 
+  ggtitle("Iris Dataset", subtitle = "Sepal Length x Petal Length") + 
+  geom_point(alpha = 0.3,  position = position_jitter()) + 
+  stat_smooth(method = "lm")
+```
+
+It seems that petal length is tightly distributed when compared to sepal length. Perhaps these relationships could be combined to help distinguish these species?
+
+## Conclusion
+
+A combination of sepal and petal measurements may elicit the best way of distinguishing *versicolor* from *virginica*, whereas *setosa* is quite distinct in these properties.
+
+## Bibliography
