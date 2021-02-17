@@ -1,0 +1,178 @@
+---
+title: "Intro to RMarkdown"
+author: "David King"
+date: "2/16/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Markdown is its own language. It uses syntax from [Pandoc/John Gruber][1].
+
+
+[1]: https://daringfireball.net/projects/markdown/basics "Pandoc/John Gruber"
+
+```{r vectors}
+# a vector is a collection of items that have all the same type
+str_vector = c("a","b","c","d")
+numeric_vector = c(1,4,5,8,3)
+# make a second numeric vector here with at least three elements
+numeric_vector_2 = c(...)
+
+# like python, R has bracket indexing, but the first element is accessed at index 1, instead of 0
+str_vector[1]
+numeric_vector[1:5]
+numeric_vector_2[...] # get the last element of numeric_vector_2
+
+# Vector lengths:
+# R has a function, length(), that acts the same as python's len() to get vector length
+# run length() on str_vector, numeric_vector, and numeric_vector_2
+length(...)
+length(...)
+length(...)
+
+# Out-of-bounds indexes:
+# Unlike python, accessing elements out-of-bounds is not an error, but NA
+# Accessing:
+str_vector[5]
+is.na(str_vector[5]) # check for NA
+numeric_vector[3:10] 
+is.na(numeric_vector[3:10]) 
+# Setting:
+numeric_vector[6] = 30
+# now check for NAs in the range 3 to 10.
+# numeric_vector[...]
+
+# fill in the rest of the vector up to 10. Check your work using "any(is.na(...))" below.
+numeric_vector[7] = ...
+numeric_vector[...] = ...
+...
+
+# check for NAs
+is.na(numeric_vector)
+any( is.na(numeric_vector) ) # if "any" are TRUE, return TRUE
+
+# combined vectors
+numeric_vector_all = c(numeric_vector,numeric_vector_2)
+```
+
+## Operations on vectors
+
+Operators and Functions that take a single number often also work on vectors.
+
+```{r more-vectors}
+numeric_vector * 10
+sqrt(5)
+sqrt(numeric_vector)
+sqrt(numeric_vector*numeric_vector)
+
+# try filling in the dashes with the functions log, exp, sin, cos
+___(numeric_vector)
+___(numeric_vector_2)
+___(numeric_vector_2[1])
+___(numeric_vector_2[-1]) 
+# question!! what does -1 do? It is different than in python
+print("-1 as a vector index does: ... ")
+
+
+# Functions that operate on a vector, but return a single value
+# fill in with the function: mean,sum, sd, median, max
+___(numeric_vector)
+___(numeric_vector_2)
+___(numeric_vector) 
+___(numeric_vector)
+# fill-in with each numeric vector
+summary(...)
+summary(...)
+```
+## It's time to start thinking about statistics
+```{r doing-stats}
+# get a large number of random numbers between 0 and 1
+rands = runif(1000) # (r)andom (unif)orm distribution
+
+# use summary() to check the mean and median... are they close to .5?
+#summary(...)
+
+# quick look: a histogram
+hist(rands)
+
+norms = rnorm(100)
+hist(norms)
+
+# let's compare the two distributions
+# Make a data frame with all the values in a vector
+uniform_df = data.frame(values=rands, distribution="uniform") # it repeated "uniform" 1000 times
+head(uniform_df)
+normal_df = data.frame(values=norms, distribution="normal") # only 100 rows because there are 100 norms
+head(normal_df)
+
+comparison = rbind(uniform_df, normal_df)
+head(comparison)
+boxplot(values ~ distribution, data=comparison) # left_side ~ right_side
+                                                # left_side: value to analyze
+                                                # right_side: grouping
+# Question: where was the normal distribution centered? higher or lower to the uniform?
+
+# Question: how does the boxplot diagram relate to the "summary()" function used above?
+```
+Add a new series of observations to the data frame `comparison`. This will result in a 3rd boxplot in the figure. 
+```{r more-w-distributions}
+
+series3 = ___(n=...) # generate a new series with `n` elements (you choose how many). Random variates can be generated from different distributions: rpois, rchisq. Or you can change the parameters of runif or rnorm.
+
+# preview some of the properties of series3
+hist(series3)
+summary(series3)
+
+series3_df = data.frame(values=series3, distribution="...") # for distribution="...", replace the ... with a descriptive name (no spaces) of the distribution you chose for series3.
+
+# append series3_df to `comparison`
+comparison = rbind(comparison, series3_df)
+boxplot(values ~ distribution, data=comparison) # will include the new data
+
+# Lastly, do statistical tests on series3 versus rands. You may use t.test again, and use wilcox.test.
+
+t.test(...,...)
+wilcox.test(...,...) # you must answer a question below about wilcox.test
+
+
+# For example, I centered a normal distribution on mean=.5. The p-value btw my new, .5-centered normal set and the uniform set was much higher (>.9). The p-value for the Wilcoxon test was .3
+```
+
+### How does the Wilcoxon test differ from the t-test?
+
+You have to look it up.
+
+> Write your answer here.
+> In this block quote syntax.
+> All lines start with `>` for blockquotes.
+
+## ggplot
+
+The library ggplot2 has more complex construction, but makes better plots. To understand the `aes()` argument of ggplot, do the interactive course on Datacamp: **Introduction to Data Visualization with ggplot2.**
+
+```{r ggplot2 graphs}
+library(ggplot2)
+
+# THE boxplot
+ggplot(data=comparison, 
+       aes(x=values, fill=distribution)) + 
+       geom_boxplot() +
+       coord_flip() # I'm used to seeing vertical boxplots. Delete/comment this line and the plus sign above to see the horizontal version.
+
+# THE histogram
+ggplot(data=comparison, 
+       aes(x=values, fill=distribution)) + 
+       geom_histogram(position="dodge")
+# A better vis than a histogram.
+# geom_density smooths the histogram and sets all counts relative to 1
+ggplot(data=comparison, 
+       aes(x=values, fill=distribution)) + 
+       geom_density(alpha=.5) # alpha is transparency, so the curves can overlap
+```
